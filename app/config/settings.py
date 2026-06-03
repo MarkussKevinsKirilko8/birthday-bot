@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from pydantic_settings import BaseSettings
 
 
@@ -25,7 +27,7 @@ class Settings(BaseSettings):
     model_config = {"env_file": ".env", "extra": "ignore"}
 
 
-try:
-    settings = Settings()
-except Exception:  # noqa: BLE001 — missing env vars at import time (e.g. during tests)
-    settings = None  # type: ignore[assignment]
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()
