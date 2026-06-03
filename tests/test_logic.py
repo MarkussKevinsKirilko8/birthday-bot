@@ -35,3 +35,24 @@ def test_diff_days_overflow_does_not_crash():
     # 31.04 is not a real date; JS rolled it to May 1 — we must not raise
     today = date(2026, 4, 28)
     assert diff_days(31, 4, today) == 3  # Apr has 30 days -> May 1
+
+
+# ---------------------------------------------------------------------------
+# Task 3: Data model
+# ---------------------------------------------------------------------------
+from app.models import Employee, Message
+
+
+def test_employee_extra_group_ids_parsing():
+    e = Employee(name="X", department="", team_lead="", gender="Male",
+                 birthday="01.01", country="", dept_chat_id="111",
+                 extra_groups="222, 333 ,")
+    assert e.extra_group_ids() == ["222", "333"]
+    assert Employee(name="X", department="", team_lead="", gender="",
+                    birthday="", country="", dept_chat_id="",
+                    extra_groups="").extra_group_ids() == []
+
+
+def test_message_holds_int_chat_id():
+    m = Message(chat_id=123, text="hi")
+    assert m.chat_id == 123 and m.text == "hi"
