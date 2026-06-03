@@ -1,0 +1,13 @@
+.venv/
+.git/
+.gitignore
+__pycache__/
+*.pyc
+data/
+docs/
+*.xlsx
+*.rtf
+.env
+.DS_Store
+.pytest_cache/
+~$*
