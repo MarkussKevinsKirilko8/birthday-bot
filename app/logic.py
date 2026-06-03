@@ -88,3 +88,96 @@ def build_birthday_messages(rows: list[Employee], today, management_chat_id) -> 
             _add(results, short, extra)
         _add(results, full, management_chat_id)
     return results
+
+
+# ---------------------------------------------------------------------------
+# Task 6: Holiday message building
+# ---------------------------------------------------------------------------
+from app.holidays import HOLIDAYS
+
+
+def _custom_msg(holiday, d):
+    return {
+        0: holiday.get("msgDay"),
+        2: holiday.get("msg2"),
+        7: holiday.get("msg7"),
+        14: holiday.get("msg14"),
+        21: holiday.get("msg21"),
+    }.get(d)
+
+
+def _advance_prefix(holiday, d):
+    if d >= 7:
+        word = "три недели" if d == 21 else "две недели" if d == 14 else "неделю"
+        return f"📅 Через {word} — {holiday['icon']} {holiday['name']}!"
+    return f"⏰ Послезавтра — {holiday['icon']} {holiday['name']}!"
+
+
+def build_holiday_messages(rows: list[Employee], today, management_chat_id) -> list[Message]:
+    results: list[Message] = []
+    for holiday in HOLIDAYS:
+        hd = parse_ddmm(holiday["date"])
+        if not hd:
+            continue
+        d = diff_days(hd[0], hd[1], today)
+        if d not in holiday["remind_days"]:
+            continue
+
+        all_dept_chats, all_extra_chats = [], []
+        names_by_dept, names_by_extra = {}, {}
+        all_names, all_names_country = [], []
+
+        for e in rows:
+            if not e.name:
+                continue
+            if holiday["gender"] != "all" and e.gender != holiday["gender"]:
+                continue
+            all_names.append(e.name)
+            all_names_country.append(f"{e.name} ({e.country})" if e.country else e.name)
+            if e.dept_chat_id:
+                key = str(e.dept_chat_id).strip()
+                if key not in names_by_dept:
+                    names_by_dept[key] = []
+                    all_dept_chats.append(key)
+                names_by_dept[key].append(e.name)
+            for extra in e.extra_group_ids():
+                if extra not in names_by_extra:
+                    names_by_extra[extra] = []
+                    all_extra_chats.append(extra)
+                names_by_extra[extra].append(e.name)
+
+        custom = _custom_msg(holiday, d)
+
+        if holiday["gender"] != "all":
+            if not all_names:
+                continue
+            if d == 0 and custom:
+                for chat, names in names_by_dept.items():
+                    lst = "\n".join(f"  • {n}" for n in names)
+                    _add(results, f"{custom}\n\nПоздравляем:\n{lst}", chat)
+                for chat, names in names_by_extra.items():
+                    lst = "\n".join(f"  • {n}" for n in names)
+                    _add(results, f"{custom}\n\nПоздравляем:\n{lst}", chat)
+                lst = "\n".join(f"  • {n}" for n in all_names_country)
+                _add(results, f"{custom}\n\n👥 Поздравляем ({len(all_names)} чел.):\n{lst}", management_chat_id)
+            else:
+                prefix = custom or _advance_prefix(holiday, d)
+                for chat, names in names_by_dept.items():
+                    lst = "\n".join(f"  • {n}" for n in names)
+                    _add(results, f"{prefix}\n\nПоздравляем:\n{lst}\n\nПодготовьте поздравления! 🎁", chat)
+                for chat, names in names_by_extra.items():
+                    lst = "\n".join(f"  • {n}" for n in names)
+                    _add(results, f"{prefix}\n\nПоздравляем:\n{lst}\n\nПодготовьте поздравления! 🎁", chat)
+                lst = "\n".join(f"  • {n}" for n in all_names_country)
+                _add(results, f"{prefix}\n\n👥 Поздравляем ({len(all_names)} чел.):\n{lst}\n\nПодготовьте поздравления! 🎁", management_chat_id)
+        else:
+            if d == 0:
+                msg = custom or f"{holiday['icon']} Сегодня — {holiday['name']}!\nС праздником, коллеги! 🎉"
+            else:
+                msg = custom or _advance_prefix(holiday, d)
+            for chat in all_dept_chats:
+                _add(results, msg, chat)
+            for chat in all_extra_chats:
+                _add(results, msg, chat)
+            _add(results, msg, management_chat_id)
+    return results

@@ -123,3 +123,48 @@ def test_holiday_list_has_v4_entries():
     for h in HOLIDAYS:
         assert {"date", "name", "icon", "gender", "remind_days"} <= set(h)
         assert h["gender"] in ("all", "Male", "Female")
+
+
+# ---------------------------------------------------------------------------
+# Task 6: Holiday message building
+# ---------------------------------------------------------------------------
+from app.logic import build_holiday_messages
+
+
+def _people():
+    return [
+        Employee("Иван", "IT", "Энди", "Male", "", "Латвия", "111", "999"),
+        Employee("Мария", "IT", "Энди", "Female", "", "Россия", "111", "999"),
+    ]
+
+
+def test_general_holiday_blasts_unique_chats_with_custom_msg():
+    today = date(2026, 5, 9)  # День Победы, general, msgDay set
+    msgs = build_holiday_messages(_people(), today, MGMT)
+    by_chat = {m.chat_id: m.text for m in msgs}
+    assert set(by_chat) == {111, 999, MGMT}
+    assert by_chat[111] == "🎖️ Сегодня — День Победы!\nПомним. Гордимся. С праздником, коллеги! 🕯️"
+
+
+def test_gendered_holiday_female_only_with_list():
+    today = date(2026, 3, 8)  # 8 марта, Female
+    msgs = build_holiday_messages(_people(), today, MGMT)
+    by_chat = {m.chat_id: m.text for m in msgs}
+    # only the female is listed; management list includes country
+    assert "  • Мария" in by_chat[111]
+    assert "Иван" not in by_chat[111]
+    assert "  • Мария (Россия)" in by_chat[MGMT]
+    assert "👥 Поздравляем (1 чел.)" in by_chat[MGMT]
+
+
+def test_gendered_holiday_advance_prefix_and_gift_line():
+    today = date(2026, 2, 16)  # 7 days before 23.02, Male, msg7 set
+    msgs = build_holiday_messages(_people(), today, MGMT)
+    text = {m.chat_id: m.text for m in msgs}[111]
+    assert text.startswith("🎖️ Через неделю — 23 Февраля!")
+    assert "  • Иван" in text and "Мария" not in text
+    assert text.endswith("Подготовьте поздравления! 🎁")
+
+
+def test_holiday_no_match_returns_empty():
+    assert build_holiday_messages(_people(), date(2026, 7, 15), MGMT) == []
