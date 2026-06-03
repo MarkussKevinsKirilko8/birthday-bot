@@ -38,3 +38,15 @@ def row_to_employee(record: dict) -> Employee | None:
         dept_chat_id=g("ID чата отдела"),
         extra_groups=g("Доп группы"),
     )
+
+
+def get_source(settings) -> DataSource:
+    if settings.data_source == "gsheets":
+        from app.sources.google_sheets import GoogleSheetsSource
+        return GoogleSheetsSource(
+            credentials_json=settings.google_credentials_json,
+            sheet_id=settings.gsheet_id,
+            tab=settings.gsheet_tab,
+        )
+    from app.sources.local_file import LocalFileSource
+    return LocalFileSource(settings.data_file, sheet=settings.gsheet_tab)
