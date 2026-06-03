@@ -19,11 +19,11 @@ Python + FastAPI + aiogram, runs in Docker. Replaces the old n8n workflow.
    ```
 4. Trigger a real send to yourself immediately (instead of waiting for 09:00):
    ```bash
-   curl -X POST http://localhost:8002/run
+   curl -X POST http://localhost:8007/run
    ```
    You'll get the notifications + an admin summary. (Standing in for dept +
    extra + management chats means ~3 copies per event — expected.)
-5. Health check: `curl http://localhost:8002/health`
+5. Health check: `curl http://localhost:8007/health`
 6. Logs: `docker compose logs -f`
 
 ## Telegram prerequisites
