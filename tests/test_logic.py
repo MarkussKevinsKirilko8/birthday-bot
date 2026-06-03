@@ -168,3 +168,17 @@ def test_gendered_holiday_advance_prefix_and_gift_line():
 
 def test_holiday_no_match_returns_empty():
     assert build_holiday_messages(_people(), date(2026, 7, 15), MGMT) == []
+
+
+# ---------------------------------------------------------------------------
+# Task 7: build_messages combiner
+# ---------------------------------------------------------------------------
+from app.logic import build_messages
+
+
+def test_build_messages_combines_blocks():
+    today = date(2026, 6, 10)  # Тимон birthday today
+    rows = [_emp(dept_chat_id="", extra_groups="")]
+    out = build_messages(rows, today, MGMT)
+    assert all(isinstance(m, Message) for m in out)
+    assert any("день рождения" in m.text for m in out)

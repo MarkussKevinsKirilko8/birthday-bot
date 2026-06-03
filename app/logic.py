@@ -181,3 +181,11 @@ def build_holiday_messages(rows: list[Employee], today, management_chat_id) -> l
                 _add(results, msg, chat)
             _add(results, msg, management_chat_id)
     return results
+
+
+# ---------------------------------------------------------------------------
+# Task 7: build_messages combiner
+# ---------------------------------------------------------------------------
+def build_messages(rows, today, management_chat_id) -> list[Message]:
+    return (build_birthday_messages(rows, today, management_chat_id)
+            + build_holiday_messages(rows, today, management_chat_id))
