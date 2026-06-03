@@ -106,3 +106,20 @@ def test_october_birthday_numeric_is_handled():
     today = date(2026, 10, 7)  # 7 days before 14.10
     msgs = build_birthday_messages([_emp(birthday=14.1, dept_chat_id="", extra_groups="")], today, MGMT)
     assert len(msgs) == 1 and "Через неделю" in msgs[0].text
+
+
+# ---------------------------------------------------------------------------
+# Task 5: Holiday data (v4 list)
+# ---------------------------------------------------------------------------
+from app.holidays import HOLIDAYS
+
+
+def test_holiday_list_has_v4_entries():
+    dates = {h["date"] for h in HOLIDAYS}
+    # newly added Latvian holidays must be present
+    assert {"03.04", "06.04", "24.12", "26.12", "31.12"} <= dates
+    assert len(HOLIDAYS) == 23
+    # every entry has the required keys
+    for h in HOLIDAYS:
+        assert {"date", "name", "icon", "gender", "remind_days"} <= set(h)
+        assert h["gender"] in ("all", "Male", "Female")
